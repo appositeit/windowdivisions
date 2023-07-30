@@ -3,6 +3,7 @@
 const {Meta, Shell} = imports.gi;
 
 const Main = imports.ui.main;
+const Dash = imports.ui.dash;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 class Extension {
@@ -68,8 +69,13 @@ class Extension {
         log(`divisions: ${divisions}`);
         const W = workarea.width / divisions;
         // from the topbar #TODO:setting
-        const Y = 28; // gnome default top bar is 25, dash to panel is 48
-        const H = workarea.height + 10;
+        const Y = Main.panel.height + 1;
+        log(`Main.panel.height: ${Y}`);
+        const H = workarea.height - 45;
+        log(`workarea.height: ${H}`);
+        // const DW = Dash.width;
+        // log(`dash.width: ${DW}`);
+
 
         // position from the left
         let X = 72 + workarea.width * pos / divisions;
