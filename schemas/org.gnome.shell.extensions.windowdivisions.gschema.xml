@@ -13,6 +13,42 @@
       <summary>How much height we increase to the window</summary>
       <default>3</default>
     </key>
-    
+    <key name="slot-1-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>1']]]></default>
+      <summary>Move to slot 1</summary>
+    </key>
+    <key name="slot-2-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>2']]]></default>
+      <summary>Move to slot 2</summary>
+    </key>
+    <key name="slot-3-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>3']]]></default>
+      <summary>Move to slot 3</summary>
+    </key>
+    <key name="slot-4-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>4']]]></default>
+      <summary>Move to slot 4</summary>
+    </key>
+    <key name="slot-5-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>5']]]></default>
+      <summary>Move to slot 5</summary>
+    </key>
+    <key name="slot-6-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>6']]]></default>
+      <summary>Move to slot 6</summary>
+    </key>
+    <key name="slot-7-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>7']]]></default>
+      <summary>Move to slot 7</summary>
+    </key>
+    <key name="slot-8-shortcut" type="as">
+      <default><![CDATA[[]]]></default>
+      <summary>Move to slot 8 (disabled by default - conflicts with magnifier)</summary>
+    </key>
+    <key name="slot-9-shortcut" type="as">
+      <default><![CDATA[['<Alt><Super>9']]]></default>
+      <summary>Move to slot 9</summary>
+    </key>
+
   </schema>
 </schemalist>

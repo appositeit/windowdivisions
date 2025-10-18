@@ -19,35 +19,81 @@ export default class WindowDivisionsExtension extends Extension {
         this._settings = this.getSettings();
         this.bindKey('center-shortcut', () => this.moveCenter());
         this.bindKey('rotate-shortcut', () => this.moveAround());
+
+        // Bind number keys for direct slot selection
+        for (let i = 1; i <= 9; i++) {
+            this.bindKey(`slot-${i}-shortcut`, () => this.moveToSlot(i - 1));
+        }
     }
 
     disable() {
         this.unbindKey('center-shortcut');
         this.unbindKey('rotate-shortcut');
+
+        // Unbind slot shortcuts
+        for (let i = 1; i <= 9; i++) {
+            this.unbindKey(`slot-${i}-shortcut`);
+        }
+
         this._settings = null;
         this._window = null;
         this._previous = null;
     }
 
     moveCenter() {
-        this.moveByMode(1);
+        const activeWindow = this.getActiveWindow();
+        if (!activeWindow) return;
+
+        const monitor = activeWindow.get_monitor();
+        const divisions = this._settings.get_int('divisions');
+        // Move to center of current monitor
+        this.moveToSlot(monitor * divisions + Math.floor(divisions / 2));
     }
 
     moveAround() {
         log("moveAround called")
         const divisions = this._settings.get_int('divisions');
-        log(`divisions: ${divisions}`);
+        const nMonitors = global.display.get_n_monitors();
+        const totalSlots = nMonitors * divisions;
+        log(`divisions: ${divisions}, monitors: ${nMonitors}, totalSlots: ${totalSlots}`);
 
         let pos = null;
         if (this._previous === null) {
             pos = 0;
         } else {
             pos = this._previous + 1;
-            if (pos >= 2*divisions) {
+            if (pos >= totalSlots) {
                 pos = 0;
             }
         }
-        this.moveByMode(pos);
+        this.moveToSlot(pos);
+    }
+
+    moveToSlot(slot) {
+        log(`moveToSlot(${slot}) called`);
+        const activeWindow = this.getActiveWindow();
+        if (!activeWindow) {
+            log('No active window');
+            return;
+        }
+
+        const divisions = this._settings.get_int('divisions');
+        const nMonitors = global.display.get_n_monitors();
+        const totalSlots = nMonitors * divisions;
+
+        // Validate slot
+        if (slot < 0 || slot >= totalSlots) {
+            log(`Invalid slot ${slot} (max: ${totalSlots - 1})`);
+            return;
+        }
+
+        // Calculate which monitor and position within that monitor
+        const targetMonitor = Math.floor(slot / divisions);
+        const positionInMonitor = slot % divisions;
+
+        log(`Slot ${slot} -> Monitor ${targetMonitor}, Position ${positionInMonitor}`);
+
+        this.moveByMode(slot);
     }
 
     moveByMode(pos) {
@@ -57,30 +103,37 @@ export default class WindowDivisionsExtension extends Extension {
             log('No active window');
             return;
         }
-        const monitor = activeWindow.get_monitor();
-        const workarea = this.getWorkAreaForMonitor(monitor);
 
         const divisions = this._settings.get_int('divisions');
+        const nMonitors = global.display.get_n_monitors();
 
-        log(`divisions: ${divisions}`);
-        const W = workarea.width / divisions;
-        // from the topbar #TODO:setting
-        const Y = Main.panel.height + 1;
-        log(`Main.panel.height: ${Y}`);
-        const H = workarea.height - 45;
-        log(`workarea.height: ${H}`);
-        // const DW = Dash.width;
-        // log(`dash.width: ${DW}`);
+        // Calculate which monitor and position within that monitor
+        const targetMonitor = Math.floor(pos / divisions);
+        const positionInMonitor = pos % divisions;
 
+        // Validate monitor index
+        if (targetMonitor >= nMonitors) {
+            log(`Invalid monitor ${targetMonitor} (max: ${nMonitors - 1})`);
+            return;
+        }
 
-        // position from the left
-        let X = 72 + workarea.width * pos / divisions;
+        const workarea = this.getWorkAreaForMonitor(targetMonitor);
+
+        log(`Monitor ${targetMonitor}: divisions: ${divisions}, position: ${positionInMonitor}`);
+
+        const sectionWidth = workarea.width / divisions;
+        const x = workarea.x + (positionInMonitor * sectionWidth);
+        const y = workarea.y;
+        const width = sectionWidth;
+        const height = workarea.height;
+
+        log(`Moving to x:${x}, y:${y}, width:${width}, height:${height}`);
 
         this.moveWindow(activeWindow, {
-            x: Math.floor(X),
-            y: Math.floor(Y),
-            width: Math.floor(W),
-            height: Math.floor(H),
+            x: Math.floor(x),
+            y: Math.floor(y),
+            width: Math.floor(width),
+            height: Math.floor(height),
         });
         this._previous = pos;
     }

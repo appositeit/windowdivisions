@@ -18,7 +18,8 @@ It's stupid, but it works!
 
 - **Grid-based window positioning**: Divides each monitor into equal sections (default: 3)
 - **Keyboard-driven**: Quick keyboard shortcuts for window positioning
-- **Multi-monitor support**: Works across multiple monitors
+- **Direct slot selection**: Jump to any slot instantly with Alt+Super+Number
+- **Multi-monitor support**: Works seamlessly across multiple monitors
 - **Configurable divisions**: Adjust the number of divisions per monitor
 
 ## Compatibility
@@ -33,8 +34,22 @@ Tested and working on:
 
 ## Keyboard Shortcuts
 
-- **`Super + C`** - Center window (move to middle division)
+### Basic Controls
+- **`Super + C`** - Center window (move to middle division of current monitor)
 - **`Super + Shift + C`** - Rotate window through all divisions
+
+### Direct Slot Selection
+- **`Alt + Super + 1-9`** - Jump directly to slot 1-9
+
+For example, with 3 divisions and 2 monitors:
+- `Alt + Super + 1` - Left third of first monitor
+- `Alt + Super + 2` - Middle third of first monitor
+- `Alt + Super + 3` - Right third of first monitor
+- `Alt + Super + 4` - Left third of second monitor
+- `Alt + Super + 5` - Middle third of second monitor
+- `Alt + Super + 6` - Right third of second monitor
+
+Note: `Alt + Super + 8` is disabled by default as it conflicts with the GNOME magnifier shortcut.
 
 ## Installation
 

@@ -11,6 +11,15 @@ const COLUMN_MODS = 1;
 const KEYBOARD_SHORTCUTS = [
     {id: 'center-shortcut', desc: 'Center window'},
     {id: 'rotate-shortcut', desc: 'Rotate window position'},
+    {id: 'slot-1-shortcut', desc: 'Move to slot 1'},
+    {id: 'slot-2-shortcut', desc: 'Move to slot 2'},
+    {id: 'slot-3-shortcut', desc: 'Move to slot 3'},
+    {id: 'slot-4-shortcut', desc: 'Move to slot 4'},
+    {id: 'slot-5-shortcut', desc: 'Move to slot 5'},
+    {id: 'slot-6-shortcut', desc: 'Move to slot 6'},
+    {id: 'slot-7-shortcut', desc: 'Move to slot 7'},
+    {id: 'slot-8-shortcut', desc: 'Move to slot 8'},
+    {id: 'slot-9-shortcut', desc: 'Move to slot 9'},
 ];
 
 export default class WindowDivisionsPreferences extends ExtensionPreferences {
