@@ -1,5 +1,9 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const {GObject, Gtk} = imports.gi;
+'use strict';
+
+import Gtk from 'gi://Gtk?version=4.0';
+import Adw from 'gi://Adw?version=1';
+import GObject from 'gi://GObject';
+import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 const COLUMN_KEY = 0;
 const COLUMN_MODS = 1;
@@ -9,189 +13,121 @@ const KEYBOARD_SHORTCUTS = [
     {id: 'rotate-shortcut', desc: 'Rotate window position'},
 ];
 
-function init() {}
+export default class WindowDivisionsPreferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        window.set_default_size(600, 400);
 
-function buildPrefsWidget() {
-    let settings = ExtensionUtils.getSettings();
-    const allTreeViews = [];
+        const page = new Adw.PreferencesPage();
+        window.add(page);
 
-    const grid = new Gtk.Grid({
-        margin_start: 12,
-        margin_end: 12,
-        margin_top: 12,
-        margin_bottom: 12,
-        column_spacing: 12,
-        row_spacing: 12,
-        visible: true,
-    });
-
-    const tileConfigLabel = new Gtk.Label({
-        label: '<b>Grid ajustement</b>',
-        use_markup: true,
-        visible: true,
-    });
-    grid.attach(tileConfigLabel, 0, 0, 1, 1);
-
-    const boxers = new Gtk.Box({
-        orientation: Gtk.Orientation.VERTICAL,
-        spacing: 5,
-    });
-
-    boxers.prepend(
-        getSomePixels(
-            'How many sections to divide the window into',
-            settings,
-            'divisions'
-        )
-    );
-
-    grid.attach(boxers, 0, 1, 1, 1);
-
-    const keyboardShortcutsLabel = new Gtk.Label({
-        label: '<b>Keyboard shortcuts</b>',
-        use_markup: true,
-        visible: true,
-    });
-    grid.attach(keyboardShortcutsLabel, 0, 2, 1, 1);
-
-    const keyboardShortcutsWidget = buildKeyboardShortcutsWidget(
-        settings,
-        allTreeViews
-    );
-    grid.attach(keyboardShortcutsWidget, 0, 3, 1, 1);
-
-    return grid;
-}
-
-function buildKeyboardShortcutsWidget(settings, allTreeViews) {
-    const grid = new Gtk.Grid({
-        halign: Gtk.Align.CENTER,
-        column_spacing: 12,
-        row_spacing: 12,
-        visible: true,
-    });
-
-    KEYBOARD_SHORTCUTS.forEach((shortcut, index) => {
-        const label = new Gtk.Label({
-            halign: Gtk.Align.END,
-            label: shortcut.desc,
-            visible: true,
+        // Grid adjustment group
+        const gridGroup = new Adw.PreferencesGroup({
+            title: 'Grid Adjustment',
         });
-        grid.attach(label, 0, index, 1, 1);
+        page.add(gridGroup);
 
-        const accelerator = buildAcceleratorWidget(
-            settings,
-            shortcut.id,
-            124,
-            26,
-            allTreeViews
-        );
-        grid.attach(accelerator, 1, index, 1, 1);
-    });
+        // Divisions row
+        const divisionsRow = new Adw.SpinRow({
+            title: 'Number of Divisions',
+            subtitle: 'How many sections to divide the window into',
+            adjustment: new Gtk.Adjustment({
+                lower: 1,
+                upper: 10,
+                step_increment: 1,
+                value: this.getSettings().get_int('divisions'),
+            }),
+        });
 
-    return grid;
-}
+        divisionsRow.connect('notify::value', (widget) => {
+            this.getSettings().set_int('divisions', widget.get_value());
+        });
 
-function getSomePixels(labeltext, settings, id) {
-    const box = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 5,
-    });
-    let label = new Gtk.Label({
-        label: labeltext,
-        halign: Gtk.Align.START,
-    });
-    box.prepend(label);
+        gridGroup.add(divisionsRow);
 
-    const field = new Gtk.SpinButton({
-        adjustment: new Gtk.Adjustment({
-            lower: 0,
-            upper: 1000,
-            step_increment: 1,
-        }),
-        visible: true,
-    });
-    box.append(field);
+        // Keyboard shortcuts group
+        const shortcutsGroup = new Adw.PreferencesGroup({
+            title: 'Keyboard Shortcuts',
+        });
+        page.add(shortcutsGroup);
 
-    field.set_value(settings.get_int(id));
-    field.connect('value-changed', widget => {
-        settings.set_int(id, widget.get_value_as_int());
-    });
+        // Create shortcut rows
+        KEYBOARD_SHORTCUTS.forEach((shortcut) => {
+            const row = this.createShortcutRow(shortcut);
+            shortcutsGroup.add(row);
+        });
+    }
 
-    settings.connect('changed::top-start', () => {
-        field.set_value(settings.get_int(id));
-    });
-    return box;
-}
+    createShortcutRow(shortcut) {
+        const settings = this.getSettings();
+        const currentShortcut = settings.get_strv(shortcut.id)[0] || '';
 
-function buildAcceleratorWidget(settings, id, width, height, allTreeViews) {
-    // Model
-    const model = new Gtk.ListStore();
-    model.set_column_types([GObject.TYPE_INT, GObject.TYPE_INT]);
-    model.set(
-        model.append(),
-        [COLUMN_KEY, COLUMN_MODS],
-        parseAccelerator(settings, id)
-    );
+        const row = new Adw.ActionRow({
+            title: shortcut.desc,
+        });
 
-    // Renderer
-    const renderer = new Gtk.CellRendererAccel({
-        accel_mode: Gtk.CellRendererAccelMode.GTK,
-        width,
-        height,
-        editable: true,
-    });
-    renderer.connect('accel-edited', function (renderer, path, key, mods) {
-        const [ok, iter] = model.get_iter_from_string(path);
-        if (!ok)
-            return;
+        const shortcutLabel = new Gtk.ShortcutLabel({
+            disabled_text: 'Disabled',
+            accelerator: currentShortcut,
+            valign: Gtk.Align.CENTER,
+        });
 
-        model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
-        settings.set_strv(id, [Gtk.accelerator_name(key, mods)]);
-    });
-    renderer.connect('accel-cleared', function (renderer, path) {
-        const [ok, iter] = model.get_iter_from_string(path);
-        if (!ok)
-            return;
+        const button = new Gtk.Button({
+            label: 'Set',
+            valign: Gtk.Align.CENTER,
+        });
 
-        model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
-        settings.set_strv(id, []);
-    });
+        button.connect('clicked', () => {
+            const dialog = new Gtk.Dialog({
+                title: `Set shortcut for: ${shortcut.desc}`,
+                transient_for: row.get_root(),
+                modal: true,
+            });
 
-    // Column
-    const column = new Gtk.TreeViewColumn();
-    column.pack_start(renderer, true);
-    column.add_attribute(renderer, 'accel-key', COLUMN_KEY);
-    column.add_attribute(renderer, 'accel-mods', COLUMN_MODS);
+            dialog.add_button('Cancel', Gtk.ResponseType.CANCEL);
+            dialog.add_button('Clear', Gtk.ResponseType.REJECT);
+            dialog.add_button('Set', Gtk.ResponseType.ACCEPT);
 
-    // TreeView
-    const treeView = new Gtk.TreeView({
-        model,
-        headers_visible: false,
-        visible: true,
-    });
-    treeView.append_column(column);
+            const content = dialog.get_content_area();
+            const label = new Gtk.Label({
+                label: 'Press the key combination',
+                margin_top: 20,
+                margin_bottom: 20,
+                margin_start: 20,
+                margin_end: 20,
+            });
+            content.append(label);
 
-    // TreeViews keep their selection when they loose focus
-    // This prevents more than one from being selected
-    treeView.get_selection().connect('changed', function (selection) {
-        if (selection.count_selected_rows() > 0) {
-            allTreeViews
-        .filter(it => it !== treeView)
-        .forEach(it => it.get_selection().unselect_all());
-        }
-    });
-    allTreeViews.push(treeView);
+            let capturedKey = null;
+            let capturedMods = null;
 
-    return treeView;
-}
+            const eventController = new Gtk.EventControllerKey();
+            eventController.connect('key-pressed', (controller, keyval, keycode, state) => {
+                capturedKey = keyval;
+                capturedMods = state;
+                const accel = Gtk.accelerator_name(keyval, state);
+                label.set_text(`Captured: ${accel}`);
+                return true;
+            });
+            dialog.add_controller(eventController);
 
-function parseAccelerator(settings, id) {
-    const accelerator = settings.get_strv(id)[0] || '';
-    const [ok, key, mods] = Gtk.accelerator_parse(accelerator);
-    // Gtk3 compatibility
-    if (typeof ok === 'number')
-        return [ok, key];
+            dialog.connect('response', (dialog, response) => {
+                if (response === Gtk.ResponseType.ACCEPT && capturedKey) {
+                    const accel = Gtk.accelerator_name(capturedKey, capturedMods);
+                    settings.set_strv(shortcut.id, [accel]);
+                    shortcutLabel.set_accelerator(accel);
+                } else if (response === Gtk.ResponseType.REJECT) {
+                    settings.set_strv(shortcut.id, []);
+                    shortcutLabel.set_accelerator('');
+                }
+                dialog.destroy();
+            });
 
-    return [key, mods];
+            dialog.present();
+        });
+
+        row.add_suffix(shortcutLabel);
+        row.add_suffix(button);
+
+        return row;
+    }
 }

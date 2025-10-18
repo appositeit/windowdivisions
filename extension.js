@@ -1,13 +1,13 @@
 'use strict';
 
-const {Meta, Shell} = imports.gi;
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const Main = imports.ui.main;
-const Dash = imports.ui.dash;
-const ExtensionUtils = imports.misc.extensionUtils;
-
-class Extension {
-    constructor() {
+export default class WindowDivisionsExtension extends Extension {
+    constructor(metadata) {
+        super(metadata);
         this._window = null;
         this._previous = null;
     }
@@ -20,7 +20,7 @@ class Extension {
     }
 
     enable() {
-        this._settings = ExtensionUtils.getSettings();
+        this._settings = this.getSettings();
         this.bindKey('center-shortcut', () => this.moveCenter());
         this.bindKey('rotate-shortcut', () => this.moveAround());
     }
@@ -123,11 +123,4 @@ class Extension {
     unbindKey(key) {
         Main.wm.removeKeybinding(key);
     }
-}
-
-/**
- *
- */
-function init() {
-    return new Extension();
 }
