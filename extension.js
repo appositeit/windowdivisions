@@ -6,12 +6,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 export default class WindowDivisionsExtension extends Extension {
-    constructor(metadata) {
-        super(metadata);
-        this._window = null;
-        this._previous = null;
-    }
-
     getActiveWindow() {
         return global.workspace_manager
         .get_active_workspace()
@@ -20,6 +14,8 @@ export default class WindowDivisionsExtension extends Extension {
     }
 
     enable() {
+        this._window = null;
+        this._previous = null;
         this._settings = this.getSettings();
         this.bindKey('center-shortcut', () => this.moveCenter());
         this.bindKey('rotate-shortcut', () => this.moveAround());
